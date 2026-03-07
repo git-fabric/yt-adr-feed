@@ -1,0 +1,15 @@
+apiVersion: v2
+name: yt-adr-feed
+description: YouTube transcript monitor → Qdrant + GitHub ADR pipeline
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - youtube
+  - transcripts
+  - qdrant
+  - adr
+  - knowledge-pipeline
+maintainers:
+  - name: Ryan Dahlberg
+    email: ryan.dahlberg@gmail.com
