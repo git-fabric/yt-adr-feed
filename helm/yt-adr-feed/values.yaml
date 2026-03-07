@@ -1,0 +1,74 @@
+# yt-adr-feed Helm chart values
+# Deployment target: k3s cluster
+
+image:
+  repository: ghcr.io/git-fabric/yt-adr-feed
+  tag: "0.1.0"  # Immutable tag (per ADR-003 §4)
+  pullPolicy: IfNotPresent
+
+# CronJob scheduling
+schedule:
+  enabled: true
+  cron: "0 */6 * * *"  # Every 6 hours
+  timezone: "America/Chicago"
+  successfulJobsHistoryLimit: 5
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+
+# Service account
+serviceAccount:
+  create: true
+  name: yt-adr-feed
+
+# Channel configuration (mounted as ConfigMap)
+config:
+  channels:
+    - id: "@IBMTechnology"
+      name: "IBM Technology"
+      enabled: true
+      max_age_days: 30
+      max_videos_per_run: 5
+      metadata_tags:
+        - ai
+        - cloud
+        - architecture
+        - enterprise
+
+  qdrant:
+    host: "qdrant.default.svc.cluster.local"
+    port: 6333
+    collection_name: "youtube_transcripts"
+    embedding_model: "all-MiniLM-L6-v2"
+    vector_size: 384
+
+  git:
+    repo_url: "git@github.com:your-org/adr-repo.git"
+    branch_target: "main"
+    author_name: "yt-adr-feed"
+    author_email: "yt-adr-feed@noreply.github.com"
+    branch_prefix: "transcripts/"
+    transcript_dir: "transcripts"
+
+  output:
+    dir: "/tmp/adr-output"
+    file_prefix: "TRANSCRIPT"
+    number_start: 1
+
+# Secrets (provide via --set or external secret manager)
+secrets:
+  githubToken: ""
+  qdrantApiKey: ""
+  sshPrivateKey: ""
+
+# Resources — CPU-based embeddings need moderate compute
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "500m"
+  limits:
+    memory: "1Gi"
+    cpu: "2000m"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

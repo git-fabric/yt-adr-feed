@@ -1,0 +1,36 @@
+# yt-adr-feed configuration
+# YouTube channel monitoring → Qdrant + GitHub ADR pipeline
+
+channels:
+  - id: "@IBMTechnology"
+    name: "IBM Technology"
+    enabled: true
+    max_age_days: 30
+    max_videos_per_run: 5
+    metadata_tags:
+      - ai
+      - cloud
+      - architecture
+      - enterprise
+
+qdrant:
+  host: "localhost"
+  port: 6333
+  grpc_port: 6334
+  # api_key: "${QDRANT_API_KEY}"  # Uncomment for authenticated Qdrant
+  collection_name: "youtube_transcripts"
+  embedding_model: "all-MiniLM-L6-v2"
+  vector_size: 384
+
+git:
+  repo_url: "git@github.com:your-org/adr-repo.git"
+  branch_target: "main"
+  author_name: "yt-adr-feed"
+  author_email: "yt-adr-feed@noreply.github.com"
+  branch_prefix: "transcripts/"
+  transcript_dir: "transcripts"
+
+output:
+  dir: "/tmp/adr-output"
+  file_prefix: "TRANSCRIPT"
+  number_start: 1

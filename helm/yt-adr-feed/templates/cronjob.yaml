@@ -1,0 +1,88 @@
+{{- if .Values.schedule.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "yt-adr-feed.fullname" . }}
+  labels:
+    {{- include "yt-adr-feed.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule.cron | quote }}
+  {{- if .Values.schedule.timezone }}
+  timeZone: {{ .Values.schedule.timezone | quote }}
+  {{- end }}
+  concurrencyPolicy: {{ .Values.schedule.concurrencyPolicy | default "Forbid" }}
+  successfulJobsHistoryLimit: {{ .Values.schedule.successfulJobsHistoryLimit | default 5 }}
+  failedJobsHistoryLimit: {{ .Values.schedule.failedJobsHistoryLimit | default 3 }}
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            {{- include "yt-adr-feed.selectorLabels" . | nindent 12 }}
+        spec:
+          serviceAccountName: {{ .Values.serviceAccount.name }}
+          restartPolicy: OnFailure
+          containers:
+            - name: {{ .Chart.Name }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["python", "-m", "yt_adr_feed"]
+              args:
+                - "--config"
+                - "/etc/yt-adr/channels.yaml"
+                - "fetch"
+                - "--output-dir"
+                - "/tmp/adr-output"
+              env:
+                {{- if .Values.secrets.githubToken }}
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "yt-adr-feed.fullname" . }}-secrets
+                      key: github-token
+                {{- end }}
+                {{- if .Values.secrets.qdrantApiKey }}
+                - name: QDRANT_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "yt-adr-feed.fullname" . }}-secrets
+                      key: qdrant-api-key
+                {{- end }}
+              volumeMounts:
+                - name: config
+                  mountPath: /etc/yt-adr
+                  readOnly: true
+                {{- if .Values.secrets.sshPrivateKey }}
+                - name: ssh-key
+                  mountPath: /home/ytadr/.ssh
+                  readOnly: true
+                {{- end }}
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+          volumes:
+            - name: config
+              configMap:
+                name: {{ include "yt-adr-feed.fullname" . }}-config
+            {{- if .Values.secrets.sshPrivateKey }}
+            - name: ssh-key
+              secret:
+                secretName: {{ include "yt-adr-feed.fullname" . }}-secrets
+                items:
+                  - key: ssh-private-key
+                    path: id_rsa
+                    mode: 0600
+            {{- end }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}
