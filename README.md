@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/banner.svg" alt="yt-adr-feed: YouTube transcripts into Qdrant and an ADR pipeline" width="100%"></p>
+
 # yt-adr-feed
 
 YouTube transcript monitor — Qdrant vector storage + GitHub ADR pipeline.
@@ -139,3 +141,8 @@ make format     # auto-format
 ## License
 
 MIT
+
+<!-- org-footer -->
+---
+
+<p align="center"><sub>Part of <a href="https://github.com/git-fabric">git-fabric</a> · composable fabric apps for Git-native infrastructure · built by <a href="https://github.com/ry-ops">ry-ops</a></sub></p>
